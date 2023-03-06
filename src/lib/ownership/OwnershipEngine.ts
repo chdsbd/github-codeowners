@@ -54,8 +54,10 @@ export class OwnershipEngine {
         if (!line || line.startsWith("#")) {
           continue;
         }
-
-        owned.push(createMatcherCodeownersRule(line, idx));
+        const matcher = createMatcherCodeownersRule(line, idx);
+        if (matcher != null) {
+          owned.push(matcher);
+        }
       }
 
       return new OwnershipEngine(owned);
@@ -67,11 +69,15 @@ export class OwnershipEngine {
 }
 
 const createMatcherCodeownersRule = (
-  rule: string,
+  rawRuleString: string,
   lineno: number
-): FileOwnershipMatcher => {
+): FileOwnershipMatcher | null => {
+  const ruleWithoutComments = rawRuleString.split("#")[0].trim();
+  if (!ruleWithoutComments) {
+    return null;
+  }
   // Split apart on spaces
-  const parts = rule.split(/\s+/);
+  const parts = ruleWithoutComments.split(/\s+/);
 
   // The first part is expected to be the path
   const path = parts[0];
@@ -83,7 +89,9 @@ const createMatcherCodeownersRule = (
     teamNames = parts.slice(1, parts.length);
     for (const name of teamNames) {
       if (!codeOwnerRegex.test(name)) {
-        throw new Error(`${name} is not a valid owner name in rule ${rule}`);
+        throw new Error(
+          `${name} is not a valid owner name in rule ${ruleWithoutComments}`
+        );
       }
     }
   }
@@ -105,7 +113,7 @@ const createMatcherCodeownersRule = (
 
   // Return our complete matcher
   return {
-    rule,
+    rule: ruleWithoutComments,
     path,
     owners: teamNames,
     lineno,
