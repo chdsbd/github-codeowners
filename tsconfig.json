@@ -4,6 +4,8 @@
     "module": "commonjs",
     "lib": ["es2017"],                        /* Specify library files to be included in the compilation. */
     "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
     "outDir": "./dist",
 
     "strict": true,
