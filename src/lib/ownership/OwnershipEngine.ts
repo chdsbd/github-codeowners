@@ -97,7 +97,7 @@ const createMatcherCodeownersRule = (
         return {
           kind: "matcher-error",
           lineno,
-          message: `${name} is not a valid owner name in rule ${ruleWithoutComments}`,
+          message: `${name} is not a valid owner name`,
         };
       }
     }
