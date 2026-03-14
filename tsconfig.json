@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "es2023",
     "module": "commonjs",
-    "lib": ["es2023"],                        /* Specify library files to be included in the compilation. */
+    "lib": ["es2023"],
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
@@ -13,8 +13,5 @@
     "moduleResolution": "node",
     "esModuleInterop": true
   },
-  "exclude": [
-    "dist",
-    "tests"
-  ]
+  "exclude": ["dist", "tests"]
 }

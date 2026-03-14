@@ -117,7 +117,7 @@ describe("OwnershipEngine", () => {
       // Assert
       expect(() =>
         OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrowError(expectedError);
+      ).toThrow(expectedError);
     });
 
     it("should throw when provided an invalid github user as an owner", () => {
@@ -136,7 +136,7 @@ describe("OwnershipEngine", () => {
       // Assert
       expect(() =>
         OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrowError(expectedError);
+      ).toThrow(expectedError);
     });
 
     it("should throw when provided an invalid email address as an owner", () => {
@@ -155,7 +155,7 @@ describe("OwnershipEngine", () => {
       // Assert
       expect(() =>
         OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrowError(expectedError);
+      ).toThrow(expectedError);
     });
 
     it("should throw when provided at least one invalid owner", () => {
@@ -175,7 +175,7 @@ describe("OwnershipEngine", () => {
       // Assert
       expect(() =>
         OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrowError(expectedError);
+      ).toThrow(expectedError);
     });
 
     it("should parse CRLF files (#4)", () => {
