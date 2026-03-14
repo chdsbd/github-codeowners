@@ -18,9 +18,10 @@ describe("OwnershipEngine", () => {
   describe("calcFileOwnership", () => {
     const createFileOwnershipMatcher = (
       path: string,
-      owners: string[]
+      owners: string[],
     ): FileOwnershipMatcher => {
       return {
+        kind: "matcher",
         rule: `${path} ${owners.join(" ")}`,
         path,
         owners,
@@ -97,85 +98,75 @@ describe("OwnershipEngine", () => {
 
       // Assert
       expect(() =>
-        OwnershipEngine.FromCodeownersFile("some/codeowners/file")
+        OwnershipEngine.FromCodeownersFile("some/codeowners/file"),
       ).not.toThrow();
     });
 
-    it("should throw when provided an invalid owner", () => {
+    it("should record an error when provided an invalid owner", () => {
       // Arrange
       const rulePath = "some/path";
       const owner = ".not@valid-owner";
 
-      const expectedError = new Error(
-        `${owner} is not a valid owner name in rule ${rulePath} ${owner}`
-      );
-
       const codeowners = `${rulePath} ${owner}`;
 
       readFileSyncMock.mockReturnValue(Buffer.from(codeowners));
 
       // Assert
-      expect(() =>
-        OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrow(expectedError);
+      const engine = OwnershipEngine.FromCodeownersFile("some/codeowners/file");
+      expect(engine.errors).toHaveLength(1);
+      expect(engine.errors[0].message).toMatchInlineSnapshot(
+        `".not@valid-owner is not a valid owner name"`,
+      );
     });
 
-    it("should throw when provided an invalid github user as an owner", () => {
+    it("should record an error when provided an invalid github user as an owner", () => {
       // Arrange
       const rulePath = "some/path";
       const owner = "invalid-owner";
 
-      const expectedError = new Error(
-        `${owner} is not a valid owner name in rule ${rulePath} ${owner}`
-      );
-
       const codeowners = `${rulePath} ${owner}`;
 
       readFileSyncMock.mockReturnValue(Buffer.from(codeowners));
 
       // Assert
-      expect(() =>
-        OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrow(expectedError);
+      const engine = OwnershipEngine.FromCodeownersFile("some/codeowners/file");
+      expect(engine.errors).toHaveLength(1);
+      expect(engine.errors[0].message).toMatchInlineSnapshot(
+        `"invalid-owner is not a valid owner name"`,
+      );
     });
 
-    it("should throw when provided an invalid email address as an owner", () => {
+    it("should record an error when provided an invalid email address as an owner", () => {
       // Arrange
       const rulePath = "some/path";
       const owner = "invalid-owner@nowhere";
 
-      const expectedError = new Error(
-        `${owner} is not a valid owner name in rule ${rulePath} ${owner}`
-      );
-
       const codeowners = `${rulePath} ${owner}`;
 
       readFileSyncMock.mockReturnValue(Buffer.from(codeowners));
 
       // Assert
-      expect(() =>
-        OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrow(expectedError);
+      const engine = OwnershipEngine.FromCodeownersFile("some/codeowners/file");
+      expect(engine.errors).toHaveLength(1);
+      expect(engine.errors[0].message).toMatchInlineSnapshot(
+        `"invalid-owner@nowhere is not a valid owner name"`,
+      );
     });
 
-    it("should throw when provided at least one invalid owner", () => {
+    it("should record an error when provided at least one invalid owner", () => {
       // Arrange
       const rulePath = "some/path";
       const valid = "valid@owner.com";
       const owner = "@invalid-owner*";
-
-      const expectedError = new Error(
-        `${owner} is not a valid owner name in rule ${rulePath} ${valid} ${owner}`
-      );
 
       const codeowners = `${rulePath} ${valid} ${owner}`;
 
       readFileSyncMock.mockReturnValue(Buffer.from(codeowners));
 
       // Assert
-      expect(() =>
-        OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrow(expectedError);
+      const engine = OwnershipEngine.FromCodeownersFile("some/codeowners/file");
+      expect(engine.errors).toHaveLength(1);
+      expect(engine.errors[0].message).toMatchInlineSnapshot(`"@invalid-owner* is not a valid owner name"`);
     });
 
     it("should parse CRLF files (#4)", () => {
@@ -187,7 +178,7 @@ describe("OwnershipEngine", () => {
 
       // Assert
       expect(() =>
-        OwnershipEngine.FromCodeownersFile("some/codeowners/file")
+        OwnershipEngine.FromCodeownersFile("some/codeowners/file"),
       ).not.toThrow();
     });
   });
@@ -206,12 +197,12 @@ describe("OwnershipEngine", () => {
         // console.log(path, expected)
         // Act
         const result = OwnershipEngine.FromCodeownersFile(
-          "some/codeowners/file"
+          "some/codeowners/file",
         ).calcFileOwnership(path);
 
         // Assert
         expect(result?.owners.length === 1).toEqual(expected);
       });
-    }
+    },
   );
 });
