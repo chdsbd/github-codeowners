@@ -47,7 +47,7 @@ describe("OwnershipEngine", () => {
       const result = underTest.calcFileOwnership(path);
 
       // Assert
-      expect(result).toEqual(expectedOwners);
+      expect(result?.owners).toEqual(expectedOwners);
     });
 
     it("should count the number of times a rule is matched to a path", () => {
@@ -82,8 +82,8 @@ describe("OwnershipEngine", () => {
       const result = underTest.calcFileOwnership(path);
 
       // Assert
-      expect(result).toContainEqual(expectedOwner);
-      expect(result).not.toContainEqual(unexpectedOwner);
+      expect(result?.owners).toContainEqual(expectedOwner);
+      expect(result?.owners).not.toContainEqual(unexpectedOwner);
     });
   });
 
@@ -117,7 +117,7 @@ describe("OwnershipEngine", () => {
       // Assert
       expect(() =>
         OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrowError(expectedError);
+      ).toThrow(expectedError);
     });
 
     it("should throw when provided an invalid github user as an owner", () => {
@@ -136,7 +136,7 @@ describe("OwnershipEngine", () => {
       // Assert
       expect(() =>
         OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrowError(expectedError);
+      ).toThrow(expectedError);
     });
 
     it("should throw when provided an invalid email address as an owner", () => {
@@ -155,7 +155,7 @@ describe("OwnershipEngine", () => {
       // Assert
       expect(() =>
         OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrowError(expectedError);
+      ).toThrow(expectedError);
     });
 
     it("should throw when provided at least one invalid owner", () => {
@@ -175,7 +175,7 @@ describe("OwnershipEngine", () => {
       // Assert
       expect(() =>
         OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrowError(expectedError);
+      ).toThrow(expectedError);
     });
 
     it("should parse CRLF files (#4)", () => {

@@ -1,5 +1,5 @@
 class Logger {
-  public error(msg: string, error?: Error): void {
+  public error(msg: string, error?: unknown): void {
     // tslint:disable-next-line:no-console
     console.error(msg, error);
   }

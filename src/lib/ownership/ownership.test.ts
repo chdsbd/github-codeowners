@@ -35,7 +35,7 @@ describe('ownership', () => {
           calcFileOwnership: (path: string) => {
             const matching = expected.find(f => f.path === path);
             if (!matching) throw new Error('unexpected path');
-            return matching.owners;
+            return { lineno: 0, owners: matching.owners };
           },
         };
       });
