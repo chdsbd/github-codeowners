@@ -15,7 +15,7 @@ export class OwnershipEngine {
   /**
    * @param matchers : FileOwnershipMatcher Matchers should be in precedence order, with overriding rules coming last
    */
-  constructor(matchers: FileOwnershipMatcher[], errors: MatcherError[]) {
+  constructor(matchers: FileOwnershipMatcher[], errors: MatcherError[] = []) {
     this.matchers = matchers;
     this.errors = errors;
   }

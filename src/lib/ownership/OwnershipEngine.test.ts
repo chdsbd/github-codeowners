@@ -21,6 +21,7 @@ describe("OwnershipEngine", () => {
       owners: string[]
     ): FileOwnershipMatcher => {
       return {
+        kind: "matcher",
         rule: `${path} ${owners.join(" ")}`,
         path,
         owners,
@@ -101,81 +102,73 @@ describe("OwnershipEngine", () => {
       ).not.toThrow();
     });
 
-    it("should throw when provided an invalid owner", () => {
+    it("should record an error when provided an invalid owner", () => {
       // Arrange
       const rulePath = "some/path";
       const owner = ".not@valid-owner";
 
-      const expectedError = new Error(
-        `${owner} is not a valid owner name in rule ${rulePath} ${owner}`
-      );
-
       const codeowners = `${rulePath} ${owner}`;
 
       readFileSyncMock.mockReturnValue(Buffer.from(codeowners));
 
       // Assert
-      expect(() =>
-        OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrow(expectedError);
+      const engine = OwnershipEngine.FromCodeownersFile("some/codeowners/file");
+      expect(engine.errors).toHaveLength(1);
+      expect(engine.errors[0].message).toEqual(
+        `${owner} is not a valid owner name in rule ${rulePath} ${owner}`
+      );
     });
 
-    it("should throw when provided an invalid github user as an owner", () => {
+    it("should record an error when provided an invalid github user as an owner", () => {
       // Arrange
       const rulePath = "some/path";
       const owner = "invalid-owner";
 
-      const expectedError = new Error(
-        `${owner} is not a valid owner name in rule ${rulePath} ${owner}`
-      );
-
       const codeowners = `${rulePath} ${owner}`;
 
       readFileSyncMock.mockReturnValue(Buffer.from(codeowners));
 
       // Assert
-      expect(() =>
-        OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrow(expectedError);
+      const engine = OwnershipEngine.FromCodeownersFile("some/codeowners/file");
+      expect(engine.errors).toHaveLength(1);
+      expect(engine.errors[0].message).toEqual(
+        `${owner} is not a valid owner name in rule ${rulePath} ${owner}`
+      );
     });
 
-    it("should throw when provided an invalid email address as an owner", () => {
+    it("should record an error when provided an invalid email address as an owner", () => {
       // Arrange
       const rulePath = "some/path";
       const owner = "invalid-owner@nowhere";
 
-      const expectedError = new Error(
-        `${owner} is not a valid owner name in rule ${rulePath} ${owner}`
-      );
-
       const codeowners = `${rulePath} ${owner}`;
 
       readFileSyncMock.mockReturnValue(Buffer.from(codeowners));
 
       // Assert
-      expect(() =>
-        OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrow(expectedError);
+      const engine = OwnershipEngine.FromCodeownersFile("some/codeowners/file");
+      expect(engine.errors).toHaveLength(1);
+      expect(engine.errors[0].message).toEqual(
+        `${owner} is not a valid owner name in rule ${rulePath} ${owner}`
+      );
     });
 
-    it("should throw when provided at least one invalid owner", () => {
+    it("should record an error when provided at least one invalid owner", () => {
       // Arrange
       const rulePath = "some/path";
       const valid = "valid@owner.com";
       const owner = "@invalid-owner*";
-
-      const expectedError = new Error(
-        `${owner} is not a valid owner name in rule ${rulePath} ${valid} ${owner}`
-      );
 
       const codeowners = `${rulePath} ${valid} ${owner}`;
 
       readFileSyncMock.mockReturnValue(Buffer.from(codeowners));
 
       // Assert
-      expect(() =>
-        OwnershipEngine.FromCodeownersFile("some/codeowners/file")
-      ).toThrow(expectedError);
+      const engine = OwnershipEngine.FromCodeownersFile("some/codeowners/file");
+      expect(engine.errors).toHaveLength(1);
+      expect(engine.errors[0].message).toEqual(
+        `${owner} is not a valid owner name in rule ${rulePath} ${valid} ${owner}`
+      );
     });
 
     it("should parse CRLF files (#4)", () => {
