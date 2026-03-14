@@ -1,20 +1,27 @@
 import * as fs from "fs";
 import ignore from "ignore";
 import { FileOwnershipMatcher } from "./types";
-import { log } from "../logger";
+
+type MatcherError = {
+  kind: "matcher-error";
+  lineno: number;
+  message: string;
+};
 
 export class OwnershipEngine {
-  private readonly matchers: FileOwnershipMatcher[];
+  matchers: FileOwnershipMatcher[];
+  errors: MatcherError[];
 
   /**
    * @param matchers : FileOwnershipMatcher Matchers should be in precedence order, with overriding rules coming last
    */
-  constructor(matchers: FileOwnershipMatcher[]) {
+  constructor(matchers: FileOwnershipMatcher[], errors: MatcherError[]) {
     this.matchers = matchers;
+    this.errors = errors;
   }
 
   public calcFileOwnership(
-    filePath: string
+    filePath: string,
   ): { lineno: number; owners: string[] } | null {
     // We reverse the matchers so that the first matching rule encountered
     // will be the last from CODEOWNERS, respecting precedence correctly and performantly
@@ -41,37 +48,35 @@ export class OwnershipEngine {
   }
 
   public static FromCodeownersFile(filePath: string) {
-    try {
-      const lines = fs
-        .readFileSync(filePath)
-        .toString()
-        .replace(/\r/g, "")
-        .split("\n");
+    const lines = fs
+      .readFileSync(filePath)
+      .toString()
+      .replace(/\r/g, "")
+      .split("\n");
 
-      const owned: FileOwnershipMatcher[] = [];
+    const owned: FileOwnershipMatcher[] = [];
+    const errors: MatcherError[] = [];
 
-      for (const [idx, line] of lines.entries()) {
-        if (!line || line.startsWith("#")) {
-          continue;
-        }
-        const matcher = createMatcherCodeownersRule(line, idx);
-        if (matcher != null) {
-          owned.push(matcher);
-        }
+    for (const [idx, line] of lines.entries()) {
+      if (!line || line.startsWith("#")) {
+        continue;
       }
-
-      return new OwnershipEngine(owned);
-    } catch (error) {
-      log.error(`failed to load codeowners file from ${filePath}`, error);
-      throw error;
+      const result = createMatcherCodeownersRule(line, idx);
+      if (result?.kind === "matcher") {
+        owned.push(result);
+      } else if (result?.kind === "matcher-error") {
+        errors.push(result);
+      }
     }
+
+    return new OwnershipEngine(owned, errors);
   }
 }
 
 const createMatcherCodeownersRule = (
   rawRuleString: string,
-  lineno: number
-): FileOwnershipMatcher | null => {
+  lineno: number,
+): FileOwnershipMatcher | MatcherError | null => {
   const ruleWithoutComments = rawRuleString.split("#")[0].trim();
   if (!ruleWithoutComments) {
     return null;
@@ -89,9 +94,11 @@ const createMatcherCodeownersRule = (
     teamNames = parts.slice(1, parts.length);
     for (const name of teamNames) {
       if (!codeOwnerRegex.test(name)) {
-        throw new Error(
-          `${name} is not a valid owner name in rule ${ruleWithoutComments}`
-        );
+        return {
+          kind: "matcher-error",
+          lineno,
+          message: `${name} is not a valid owner name in rule ${ruleWithoutComments}`,
+        };
       }
     }
   }
@@ -105,7 +112,7 @@ const createMatcherCodeownersRule = (
     if (r.pattern.endsWith("/*")) {
       r.regex = new RegExp(
         r.regex.source.replace("(?=$|\\/$)", "(?=$|[^\\/]$)"),
-        "i"
+        "i",
       );
     }
     return r;
@@ -113,6 +120,7 @@ const createMatcherCodeownersRule = (
 
   // Return our complete matcher
   return {
+    kind: "matcher",
     rule: ruleWithoutComments,
     path,
     owners: teamNames,

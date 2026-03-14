@@ -1,48 +1,51 @@
-import { getOwnership } from './ownership';
-import { OwnershipEngine } from './OwnershipEngine';
-import { File } from '../file';
+import { getOwnership } from "./ownership";
+import { OwnershipEngine } from "./OwnershipEngine";
+import { File } from "../file";
 
-jest.mock('./OwnershipEngine');
+jest.mock("./OwnershipEngine");
 
-describe('ownership', () => {
+describe("ownership", () => {
   beforeEach(() => {
     jest.resetAllMocks();
   });
 
-  describe('getOwnership', () => {
-    it('should create an engine using the specified code owners file', async () => {
+  describe("getOwnership", () => {
+    it("should create an engine using the specified code owners file", async () => {
       // Arrange
-      const expected = 'some/file';
+      const expected = "some/file";
 
       // Act
       await getOwnership(expected, []);
 
       // Assert
-      expect(OwnershipEngine.FromCodeownersFile).toHaveBeenLastCalledWith(expected);
+      expect(OwnershipEngine.FromCodeownersFile).toHaveBeenLastCalledWith(
+        expected,
+      );
     });
 
-    it('should return owned files', async () => {
+    it("should return owned files", async () => {
       // Arrange
       const expected = [
-        new File({ path: 'is/not-owned', owners: ['@some/owner'] }),
-        new File({ path: 'is/owned', owners: ['@some/other-owner'] }),
+        new File({ path: "is/not-owned", owners: ["@some/owner"] }),
+        new File({ path: "is/owned", owners: ["@some/other-owner"] }),
       ];
 
-      const mockEngine = OwnershipEngine as any;
-      mockEngine.FromCodeownersFile.mockImplementation(() => {
-        return {
-          ...OwnershipEngine,
+      jest
+        .mocked(OwnershipEngine.FromCodeownersFile)
+        .mockImplementation(() => ({
+          matchers: [],
+          errors: [],
+          getRules: () => [],
           calcFileOwnership: (path: string) => {
-            const matching = expected.find(f => f.path === path);
-            if (!matching) throw new Error('unexpected path');
-            return matching.owners;
+            const matching = expected.find((f) => f.path === path);
+            if (!matching) throw new Error("unexpected path");
+            return { lineno: 0, owners: matching.owners };
           },
-        };
-      });
+        }));
 
       // Act
-      const paths = expected.map(f => f.path);
-      const result = await getOwnership('some/file', paths);
+      const paths = expected.map((f) => f.path);
+      const result = await getOwnership("some/file", paths);
 
       // Assert
       expect(result).toEqual(expected);
